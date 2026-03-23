@@ -94,7 +94,7 @@ describe("GatewayClient", () => {
 
       const req = JSON.parse(ws.sent[0]!);
       expect(req.params.auth.token).toBe("test-token");
-      expect(req.params.client.id).toBe("command-center");
+      expect(req.params.client.id).toBe("openclaw-control-ui");
       expect(req.params.minProtocol).toBe(3);
       expect(req.params.maxProtocol).toBe(3);
 

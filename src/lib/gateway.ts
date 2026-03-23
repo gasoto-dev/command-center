@@ -151,7 +151,7 @@ export class GatewayClient {
     const params: ConnectParams = {
       minProtocol: 3,
       maxProtocol: 3,
-      client: { id: "command-center", version: "0.1.0", platform: "web", mode: "operator" },
+      client: { id: "openclaw-control-ui", version: "0.1.0", platform: "web", mode: "webchat" },
       role: "operator",
       scopes: ["operator.read", "operator.write"],
       caps: [],
