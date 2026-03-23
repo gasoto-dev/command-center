@@ -2,8 +2,26 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
+import fs from "fs";
+
+const buildId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function versionJsonPlugin() {
+  return {
+    name: "version-json",
+    closeBundle() {
+      fs.writeFileSync(
+        path.resolve(__dirname, "dist/version.json"),
+        JSON.stringify({ buildId }),
+      );
+    },
+  };
+}
 
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -34,6 +52,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       },
     }),
+    versionJsonPlugin(),
   ],
   resolve: {
     alias: {
