@@ -55,7 +55,9 @@ afterEach(() => {
 });
 
 function latestWs(): MockWebSocket {
-  return MockWebSocket.instances[MockWebSocket.instances.length - 1];
+  const ws = MockWebSocket.instances[MockWebSocket.instances.length - 1];
+  if (!ws) throw new Error("No WebSocket instance");
+  return ws;
 }
 
 async function performHandshake(client: GatewayClient, url = "ws://test") {
@@ -71,7 +73,7 @@ async function performHandshake(client: GatewayClient, url = "ws://test") {
 
   // client should have sent a connect request
   await vi.advanceTimersByTimeAsync(0);
-  const connectReq = JSON.parse(ws.sent[0]);
+  const connectReq = JSON.parse(ws.sent[0]!);
   expect(connectReq.type).toBe("req");
   expect(connectReq.method).toBe("connect");
 
@@ -90,7 +92,7 @@ describe("GatewayClient", () => {
 
       expect(client.getState()).toBe("connected");
 
-      const req = JSON.parse(ws.sent[0]);
+      const req = JSON.parse(ws.sent[0]!);
       expect(req.params.auth.token).toBe("test-token");
       expect(req.params.client.id).toBe("command-center");
       expect(req.params.minProtocol).toBe(3);
@@ -122,8 +124,8 @@ describe("GatewayClient", () => {
 
       await vi.advanceTimersByTimeAsync(0);
 
-      const req1 = JSON.parse(ws.sent[1]);
-      const req2 = JSON.parse(ws.sent[2]);
+      const req1 = JSON.parse(ws.sent[1]!);
+      const req2 = JSON.parse(ws.sent[2]!);
 
       // respond out of order
       ws.simulateMessage({ type: "res", id: req2.id, ok: true, payload: { messages: [] } });
@@ -143,7 +145,7 @@ describe("GatewayClient", () => {
       const p = client.request("bad.method", {});
       await vi.advanceTimersByTimeAsync(0);
 
-      const req = JSON.parse(ws.sent[1]);
+      const req = JSON.parse(ws.sent[1]!);
       ws.simulateMessage({ type: "res", id: req.id, ok: false, error: { code: "NOT_FOUND", message: "Unknown method" } });
 
       await expect(p).rejects.toThrow("Unknown method");
@@ -151,9 +153,9 @@ describe("GatewayClient", () => {
       client.disconnect();
     });
 
-    it("rejects request when not connected", () => {
+    it("rejects request when not connected", async () => {
       const client = new GatewayClient();
-      expect(() => client.request("foo", {})).rejects.toThrow("Not connected");
+      await expect(client.request("foo", {})).rejects.toThrow("Not connected");
     });
   });
 
