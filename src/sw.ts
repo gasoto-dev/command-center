@@ -7,6 +7,14 @@ declare const self: ServiceWorkerGlobalScope;
 // Precache assets injected by vite-plugin-pwa
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Auto-activate new service worker immediately (no waiting)
+self.addEventListener("install", () => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 interface PushPayload {
   title: string;
   body: string;
