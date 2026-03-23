@@ -54,11 +54,10 @@ export function useChat(client: GatewayClient | null): UseChatReturn {
         let key = sessionKey;
 
         if (!key) {
-          // Ask gateway for existing sessions
+          // Try to discover sessions from the gateway
           try {
             const sessResp = await client.request("sessions.list", {});
             const sessions = (sessResp.sessions ?? []) as Array<{ key?: string; sessionKey?: string; type?: string }>;
-            // Find a chat/main session
             const chatSession = sessions.find(
               (s) => s.type === "chat" || s.type === "main",
             ) ?? sessions[0];
@@ -66,13 +65,13 @@ export function useChat(client: GatewayClient | null): UseChatReturn {
               key = chatSession.sessionKey ?? chatSession.key ?? null;
             }
           } catch {
-            // sessions.list may not be available — fall back to "default"
+            // sessions.list may require scopes we don't have — fall through to default
           }
         }
 
-        // Fall back to a well-known default
+        // Fall back to the well-known main session key
         if (!key) {
-          key = "default";
+          key = "main";
         }
 
         setSessionKey(key);
