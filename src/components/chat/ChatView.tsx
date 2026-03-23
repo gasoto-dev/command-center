@@ -22,7 +22,7 @@ export function ChatView({ client, connectionState }: ChatViewProps) {
   }, [messages]);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-slate-950">
+    <div className="flex h-full flex-col bg-slate-950">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         {loading && (
