@@ -45,9 +45,10 @@ function App() {
       onTabChange={setActiveTab}
       onLogout={handleLogout}
     >
-      {activeTab === "chat" ? (
+      {activeTab === "chat" && (
         <ChatView client={client} connectionState={state} />
-      ) : (
+      )}
+      {activeTab === "agents" && (
         <AgentFeed
           agents={agents}
           loading={loading}
@@ -55,6 +56,18 @@ function App() {
           onKill={killAgent}
           onKillAll={killAll}
         />
+      )}
+      {activeTab === "controls" && (
+        <div className="flex flex-1 items-center justify-center text-slate-500">⚡ Controls — Coming Soon</div>
+      )}
+      {activeTab === "status" && (
+        <div className="flex flex-1 items-center justify-center text-slate-500">📊 Status — Coming Soon</div>
+      )}
+      {activeTab === "metrics" && (
+        <div className="flex flex-1 items-center justify-center text-slate-500">📈 Metrics — Coming Soon</div>
+      )}
+      {activeTab === "notifications" && (
+        <div className="flex flex-1 items-center justify-center text-slate-500">🔔 Notifications — Coming Soon</div>
       )}
     </AppShell>
   );

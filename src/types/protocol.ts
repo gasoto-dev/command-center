@@ -76,22 +76,41 @@ export interface HelloOkPayload {
 
 // ── Chat ──
 
+export interface ChatContentBlock {
+  type: "text";
+  text: string;
+}
+
 export interface ChatMessage {
   id: string;
-  sender: string;
-  text: string;
-  ts: number;
+  role: "user" | "assistant" | "system";
+  content: ChatContentBlock[] | string;
+  timestamp: number;
+  runId?: string;
 }
 
 export interface ChatSendParams {
-  text: string;
-  channel?: string;
+  sessionKey: string;
+  message: string;
+  deliver: boolean;
+  idempotencyKey: string;
 }
 
 export interface ChatHistoryParams {
-  channel?: string;
-  before?: number;
+  sessionKey: string;
   limit?: number;
+}
+
+export interface ChatSendResponse {
+  runId: string;
+  status: "started" | "in_flight" | "ok";
+}
+
+export interface ChatStreamPayload {
+  runId: string;
+  delta?: string;
+  content?: ChatContentBlock[];
+  done?: boolean;
 }
 
 // ── Connection state ──

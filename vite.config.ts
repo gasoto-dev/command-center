@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       manifest: {
         name: "Command Center",
@@ -26,6 +29,9 @@ export default defineConfig({
             type: "image/png",
           },
         ],
+      },
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       },
     }),
   ],

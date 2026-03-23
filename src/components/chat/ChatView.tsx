@@ -11,15 +11,15 @@ interface ChatViewProps {
 }
 
 export function ChatView({ client, connectionState }: ChatViewProps) {
-  const { messages, loading, sendMessage } = useChat(client);
+  const { messages, loading, streaming, sendMessage } = useChat(client);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const isConnected = connectionState === "connected";
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or streaming updates
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streaming]);
 
   return (
     <div className="flex h-full flex-col bg-slate-950">
@@ -41,6 +41,19 @@ export function ChatView({ client, connectionState }: ChatViewProps) {
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
           ))}
+
+          {streaming && (
+            <div className="flex justify-start" data-testid="streaming-indicator">
+              <div className="rounded-2xl bg-slate-800 px-4 py-2 text-sm text-slate-400">
+                <span className="inline-flex gap-1">
+                  <span className="animate-pulse">●</span>
+                  <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>●</span>
+                  <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>●</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
       </div>
