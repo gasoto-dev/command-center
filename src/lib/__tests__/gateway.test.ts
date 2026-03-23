@@ -1,4 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+import { getOrCreateDeviceIdentity, signChallenge } from "../device-identity";
+
+vi.mock("../device-identity", () => ({
+  getOrCreateDeviceIdentity: vi.fn(),
+  signChallenge: vi.fn(),
+}));
+
 import { GatewayClient } from "../gateway";
 
 // ── Mock WebSocket ──
@@ -47,6 +55,15 @@ beforeEach(() => {
   MockWebSocket.instances = [];
   vi.stubGlobal("WebSocket", MockWebSocket);
   vi.useFakeTimers();
+  vi.mocked(getOrCreateDeviceIdentity).mockResolvedValue({
+    deviceId: "abcd1234",
+    publicKey: "dGVzdC1wdWJsaWMta2V5",
+    privateKey: "dGVzdC1wcml2YXRlLWtleQ",
+  });
+  vi.mocked(signChallenge).mockResolvedValue({
+    signature: "dGVzdC1zaWduYXR1cmU",
+    signedAt: 1700000000000,
+  });
 });
 
 afterEach(() => {
@@ -71,7 +88,9 @@ async function performHandshake(client: GatewayClient, url = "ws://test") {
   // gateway sends challenge
   ws.simulateMessage({ type: "event", event: "connect.challenge", payload: { nonce: "abc", ts: 1 } });
 
-  // client should have sent a connect request
+  // client should have sent a connect request (flush async device identity + signing)
+  await vi.advanceTimersByTimeAsync(0);
+  await vi.advanceTimersByTimeAsync(0);
   await vi.advanceTimersByTimeAsync(0);
   const connectReq = JSON.parse(ws.sent[0]!);
   expect(connectReq.type).toBe("req");
@@ -97,6 +116,13 @@ describe("GatewayClient", () => {
       expect(req.params.client.id).toBe("openclaw-control-ui");
       expect(req.params.minProtocol).toBe(3);
       expect(req.params.maxProtocol).toBe(3);
+      expect(req.params.device).toEqual({
+        id: "abcd1234",
+        publicKey: "dGVzdC1wdWJsaWMta2V5",
+        signature: "dGVzdC1zaWduYXR1cmU",
+        signedAt: 1700000000000,
+        nonce: "abc",
+      });
 
       client.disconnect();
     });

@@ -47,6 +47,14 @@ export interface ClientInfo {
   mode: string;
 }
 
+export interface DeviceParams {
+  id: string;
+  publicKey: string;
+  signature: string;
+  signedAt: number;
+  nonce: string;
+}
+
 export interface ConnectParams {
   minProtocol: number;
   maxProtocol: number;
@@ -57,11 +65,13 @@ export interface ConnectParams {
   commands: string[];
   permissions: Record<string, unknown>;
   auth: { token: string };
+  device?: DeviceParams;
 }
 
 export interface HelloOkPayload {
   type: "hello-ok";
   protocol: number;
+  auth?: { deviceToken?: string };
 }
 
 // ── Chat ──

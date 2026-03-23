@@ -4,8 +4,10 @@ import type {
   ConnectionState,
   EventFrame,
   Frame,
+  HelloOkPayload,
   RequestFrame,
 } from "../types/protocol";
+import { getOrCreateDeviceIdentity, signChallenge } from "./device-identity";
 
 type StateListener = (state: ConnectionState) => void;
 type EventListener = (payload: Record<string, unknown>, frame: EventFrame) => void;
@@ -29,6 +31,7 @@ export class GatewayClient {
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private shouldReconnect = false;
+  public deviceToken: string | null = null;
 
   getState(): ConnectionState {
     return this.state;
@@ -106,7 +109,8 @@ export class GatewayClient {
         }
 
         if (!handshakeDone && frame.type === "event" && frame.event === "connect.challenge") {
-          this.handleChallenge(ws)
+          const challengePayload = frame.payload as { nonce: string; ts: number };
+          this.handleChallenge(ws, challengePayload.nonce)
             .then(() => {
               handshakeDone = true;
               this.reconnectAttempt = 0;
@@ -146,24 +150,53 @@ export class GatewayClient {
     });
   }
 
-  private async handleChallenge(ws: WebSocket): Promise<void> {
+  private async handleChallenge(ws: WebSocket, nonce: string): Promise<void> {
+    const identity = await getOrCreateDeviceIdentity();
+
+    const clientId = "openclaw-control-ui";
+    const clientMode = "webchat";
+    const role = "operator";
+    const scopes = ["operator.admin", "operator.approvals", "operator.pairing"];
+
+    const { signature, signedAt } = await signChallenge(identity, {
+      clientId,
+      clientMode,
+      role,
+      scopes,
+      token: this.token,
+      nonce,
+    });
+
     const id = crypto.randomUUID();
     const params: ConnectParams = {
       minProtocol: 3,
       maxProtocol: 3,
-      client: { id: "openclaw-control-ui", version: "0.1.0", platform: "web", mode: "webchat" },
-      role: "operator",
-      scopes: ["operator.read", "operator.write"],
+      client: { id: clientId, version: "0.1.0", platform: "web", mode: clientMode },
+      role,
+      scopes,
       caps: [],
       commands: [],
       permissions: {},
       auth: { token: this.token },
+      device: {
+        id: identity.deviceId,
+        publicKey: identity.publicKey,
+        signature,
+        signedAt,
+        nonce,
+      },
     };
     const frame: RequestFrame = { type: "req", id, method: "connect", params: params as unknown as Record<string, unknown> };
 
     return new Promise<void>((resolve, reject) => {
       this.pending.set(id, {
-        resolve: () => resolve(),
+        resolve: (payload) => {
+          const hello = payload as unknown as HelloOkPayload;
+          if (hello.auth?.deviceToken) {
+            this.deviceToken = hello.auth.deviceToken;
+          }
+          resolve();
+        },
         reject: (err) => reject(err),
       });
       ws.send(JSON.stringify(frame));
