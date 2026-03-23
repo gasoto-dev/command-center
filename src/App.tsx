@@ -8,9 +8,9 @@ import { AgentFeed } from "./components/agents/AgentFeed";
 import type { Tab } from "./components/layout/BottomNav";
 
 function getGatewayUrl(): string {
+  if (import.meta.env.VITE_GATEWAY_URL) return import.meta.env.VITE_GATEWAY_URL;
   if (import.meta.env.DEV) return "ws://localhost:18789";
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}`;
+  return "wss://openclaw.primordialpen.com";
 }
 
 function App() {
