@@ -9,13 +9,22 @@ const statusColor: Record<ConnectionState, string> = {
 
 interface HeaderProps {
   connectionState: ConnectionState;
+  onLogout?: () => void;
 }
 
-export function Header({ connectionState }: HeaderProps) {
+export function Header({ connectionState, onLogout }: HeaderProps) {
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3">
       <h1 className="text-lg font-semibold text-slate-100">Command Center</h1>
       <div className="flex items-center gap-2">
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="text-xs text-slate-500 hover:text-slate-300"
+          >
+            Logout
+          </button>
+        )}
         <span className="text-xs text-slate-400 capitalize">{connectionState}</span>
         <span
           data-testid="connection-indicator"

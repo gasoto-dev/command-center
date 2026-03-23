@@ -7,10 +7,11 @@ interface AppShellProps {
   connectionState: ConnectionState;
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
+  onLogout?: () => void;
   children: ReactNode;
 }
 
-export function AppShell({ connectionState, activeTab, onTabChange, children }: AppShellProps) {
+export function AppShell({ connectionState, activeTab, onTabChange, onLogout, children }: AppShellProps) {
   return (
     <div
       className="flex flex-col bg-slate-950"
@@ -21,7 +22,7 @@ export function AppShell({ connectionState, activeTab, onTabChange, children }: 
         paddingRight: "env(safe-area-inset-right)",
       }}
     >
-      <Header connectionState={connectionState} />
+      <Header connectionState={connectionState} onLogout={onLogout} />
       <main className="flex-1 overflow-hidden">{children}</main>
       <BottomNav activeTab={activeTab} onTabChange={onTabChange} />
     </div>
